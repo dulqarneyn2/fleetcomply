@@ -515,8 +515,9 @@ function fcCarrierPremiumChart(){
  return `<section class="fc-premium-chart fc-performance-v3" aria-label="Company performance over the last eight weeks"><div class="fc-premium-chart-head"><div><div class="fc-chart-kicker"><span class="fc-chart-pulse"></span> FLEET ANALYTICS <span class="fc-chart-period">LAST 8 WEEKS</span>${demoMode?'<span class="fc-demo-pill">DEMO DATA</span>':''}</div><h2>Company Performance</h2><p>Weekly load completion rate · Percentage (%)</p></div><div class="fc-chart-topscore"><div class="fc-chart-stat">${pct===null?'—':pct+'%'}</div><div class="fc-chart-legend">Overall performance</div></div></div><div class="fc-chart-kpis"><div><span>Completed loads</span><strong>${done}</strong></div><div><span>Total loads</span><strong>${total}</strong></div><div><span>Latest weekly rate</span><strong>${latest===undefined?'—':latest+'%'}</strong></div><div><span>Weekly change</span><strong class="${delta===null?'':delta>=0?'fc-up':'fc-down'}">${delta===null?'—':(delta>0?'+':'')+delta+' pts'}</strong></div></div><div class="fc-chart-plot">${total?chart:'<div class="fc-chart-empty"><strong>No performance data yet</strong><p>Add loads with pickup dates and mark them Completed to see your weekly performance.</p></div>'}</div><div class="fc-chart-foot"><span><i class="fc-legend-dot"></i> Completion rate</span><span>${demoMode?'Illustrative demo values only · Add dispatch loads to show real company data':'Calculated from saved dispatch records · Weeks without loads are not scored'}</span></div></section>`;
 }
 
-function render(){ state.account=state.account||{logo:'',billing:{},billingHistory:[],users:[]};state.account.users=state.account.users||[];state.account.billingHistory=state.account.billingHistory||[];state.account.billing=state.account.billing||{};state.companyDocs=state.companyDocs||[];state.policies=state.policies||[]; $('title').textContent=['Accidents','Drug & Alcohol','Inspections'].includes(page)?'Safety & Compliance':(['Reports','Audit','Reports & Audit'].includes(page)?'Reports & Audit':page);$('nav').innerHTML=pages.map(p=>`<button class="nav ${['Dispatch & Loads','Accounting'].includes(p)?'nav-subitem ':''}${(p===page||(p==='Safety & Compliance'&&['Accidents','Drug & Alcohol','Inspections'].includes(page))||(p==='Reports & Audit'&&['Reports','Audit'].includes(page)))?'active':''}" data-page="${esc(p)}" title="${esc(p)}" aria-label="${esc(p)}"><span class="nav-icon" aria-hidden="true">${navIcons[p]||'◈'}</span><span class="nav-label">${esc(p)}</span></button>`).join('');let html='';
-if(page==='Safety & Compliance')page='Accidents';if(page==='Reports & Audit')page='Reports';
+window.sawaCompliancePages=["Compliance Dashboard", "HOS & ELD", "Corrective Actions", "Training & Policies", "Audit Readiness", "Compliance Alerts", "FMCSA Monitoring", "MVR Monitoring", "Safety Scorecards", "Regulatory Calendar", "Document Retention", "Document Requests", "Company Credentials", "DataQs Disputes", "Service Providers", "Hazmat Compliance"];
+function render(){ state.account=state.account||{logo:'',billing:{},billingHistory:[],users:[]};state.account.users=state.account.users||[];state.account.billingHistory=state.account.billingHistory||[];state.account.billing=state.account.billing||{};state.companyDocs=state.companyDocs||[];state.policies=state.policies||[]; $('title').textContent=['Accidents','Drug & Alcohol','Inspections','Driver Compliance','Equipment Compliance','Compliance Schedule',...window.sawaCompliancePages].includes(page)?'Safety & Compliance':(['Reports','Audit','Reports & Audit'].includes(page)?'Reports & Audit':page);$('nav').innerHTML=pages.map(p=>`<button class="nav ${['Dispatch & Loads','Accounting'].includes(p)?'nav-subitem ':''}${(p===page||(p==='Safety & Compliance'&&['Accidents','Drug & Alcohol','Inspections','Driver Compliance','Equipment Compliance','Compliance Schedule',...window.sawaCompliancePages].includes(page))||(p==='Reports & Audit'&&['Reports','Audit'].includes(page)))?'active':''}" data-page="${esc(p)}" title="${esc(p)}" aria-label="${esc(p)}"><span class="nav-icon" aria-hidden="true">${navIcons[p]||'◈'}</span><span class="nav-label">${esc(p)}</span></button>`).join('');let html='';
+const complianceView=page==='Driver Compliance'?'Drivers / DQF':page==='Equipment Compliance'?'Equipment':null;if(complianceView)page=complianceView;if(page==='Safety & Compliance')page='Accidents';if(page==='Reports & Audit')page='Reports';
 if(page==='Dashboard'){const metrics=[['Total Driver Records',state.drivers.length],['Active Drivers',active().length],['Equipment',state.equipment.length],['Accidents',state.accidents.length],['Licenses Expiring in 30 Days',due('license')],['Medical Cards Expiring in 30 Days',due('medical')],['Submitted Applications',state.applications.filter(a=>a.data).length]];html=`<section class="fc-dashboard-intro"><div><span class="fc-eyebrow">FLEET OVERVIEW</span><h2>Dashboard Overview</h2><p>Monitor your drivers, equipment and compliance records in one place.</p></div><div class="fc-intro-actions"><button type="button" data-page="Drivers / DQF">Manage Drivers ↗</button><button type="button" data-page="Dispatch & Loads">Dispatch & Loads ↗</button></div></section><div class="grid">${metrics.map(m=>card(`<div class="muted">${m[0]}</div><div class="metric">${m[1]}</div>`)).join('')}</div>`+card(`<div class="flex"><h2>FMCSA Safety & Authority</h2>${btn('Edit Demo Values','fmEdit')}</div>${edit==='fmEdit'?`<form data-form="fmcsa">${field('DOT #','text',state.fmcsa.dotNumber||'','dotNumber')}${field('MC #','text',state.fmcsa.mcNumber||'','mcNumber')}${select('rating',['Not Rated','Satisfactory','Conditional','Unsatisfactory'],state.fmcsa.rating)}${select('dot',['Active','Inactive','Out of Service'],state.fmcsa.dot)}${select('authority',['Authorized','Not Authorized','Pending','Revoked'],state.fmcsa.authority)}${field('ISS Value','number',state.fmcsa.iss,'iss')}<button class="primary">Save</button></form>`:`<h2>${esc(state.fmcsa.rating)}</h2><p><strong>DOT #:</strong> ${esc(state.fmcsa.dotNumber||'Not entered')} &nbsp; · &nbsp; <strong>MC #:</strong> ${esc(state.fmcsa.mcNumber||'Not entered')}</p><p>DOT Status: ${esc(state.fmcsa.dot)} · Authority: ${esc(state.fmcsa.authority)}</p><p>ISS: ${esc(state.fmcsa.iss||'Not Connected')}</p>`}`)+card(`<h2>CSA BASIC Scores</h2>${['Unsafe Driving','Crash Indicator','Hours of Service','Vehicle Maintenance','Controlled Substances / Alcohol','Hazmat Compliance','Driver Fitness'].map(x=>`<div class="rowcard flex"><span>${x}</span><span>${esc(state.basics[x]||'—')}</span></div>`).join('')}${btn('Edit BASIC Scores','basics')}${edit==='basics'?`<form data-form="basics">${['Unsafe Driving','Crash Indicator','Hours of Service','Vehicle Maintenance','Controlled Substances / Alcohol','Hazmat Compliance','Driver Fitness'].map(x=>field(x,'number',state.basics[x]||'')).join('')}<button class="primary">Save Scores</button></form>`:''}`)}
 if(page==='Account / Settings'){tab=tab||'Company Profile';html=tabs(['Company Profile','Company Logo','Company Documents & Policies','Factoring','Fuel Settings','Billing Profile','Billing History','Users & Roles','Integrations']);if(tab==='Company Profile'){const cp=state.account.profile||{};html+=card(`<div class="flex wrap"><h2>Company Profile</h2>${btn('Edit Company Profile','editCompanyProfile','primary')}</div><p><strong>${esc(cp.name||'Northstar Fleet Services LLC')}</strong></p><p>USDOT ${esc(cp.dot||'0000000')} · MC ${esc(cp.mc||'000000')}</p><p>${esc(cp.address||'Fictional demonstration carrier')}</p><p>${esc(cp.phone||'')} ${esc(cp.email||'')}</p>${edit==='editCompanyProfile'?`<form data-form="companyProfile" class="stack">${field('Legal Company Name','text',cp.name||'')}${field('USDOT Number','text',cp.dot||'')}${field('MC Number','text',cp.mc||'')}${field('Business Address','text',cp.address||'')}${field('Phone','tel',cp.phone||'')}${field('Email','email',cp.email||'')}<button class="primary">Save Company Profile</button>${btn('Cancel','cancel')}</form>`:''}`)}if(tab==='Company Logo')html+=card(`<h2>Company Logo</h2><p class="muted">Set the logo shown in your company account. This is stored in this browser only.</p>${state.account.logo?`<img alt="Company logo" src="${esc(state.account.logo)}" style="max-width:220px;max-height:120px;object-fit:contain;display:block;margin:12px 0">`:'<div class="empty">No logo uploaded</div>'}<form data-form="logo"><div class="field"><label>Choose Company Logo</label><input type="file" name="Logo File" accept="image/png,image/jpeg,image/webp" required></div><button class="primary">Save Logo</button></form>${state.account.logo?btn('Remove Logo','removeLogo','danger'):''}`);
 }
@@ -618,7 +619,132 @@ ${edit==='fmcsaConnect'||edit==='fmcsaEdit'?`<form data-form="fmcsaProfile">${fi
 ${edit==='fmcsaBasics'?`<form data-form="fmcsaBasics"><p class="muted">Enter information from an official FMCSA SMS report. Leave unavailable measures blank.</p>${['Unsafe Driving','Crash Indicator','Hours-of-Service Compliance','Vehicle Maintenance','Controlled Substances / Alcohol','Hazardous Materials Compliance','Driver Fitness'].map((name,i)=>{const b=(fm.basics||[]).find(x=>x.name===name)||{};return `<div class="rowcard"><strong>${esc(name)}</strong><input type="hidden" name="basic-name-${i}" value="${esc(name)}">${field('Measure '+i,b.value||'')}${select('Status '+i,['Not reviewed','Below intervention threshold','Above intervention threshold','Not applicable'],b.status||'Not reviewed')}${field('Notes '+i,b.notes||'')}</div>`}).join('')}<div class="actions"><button type="submit">Save CSA Monitoring</button>${btn('Cancel','cancel')}</div></form>`:''}`);
 html+=card(`<h3>FMCSA Clearinghouse</h3><p class="muted">Drug & Alcohol Clearinghouse records and consent documents are managed under Drug & Alcohol. This demo does not submit or retrieve Clearinghouse queries.</p>${btn('Open Drug & Alcohol','goDrug')}`);
 }
-if(['Accidents','Drug & Alcohol','Inspections'].includes(page)){const items=[['Accidents','Accidents'],['Drug & Alcohol','Drug & Alcohol'],['Inspections','Inspections']];html=`<section class="card"><h2>Safety & Compliance</h2><div class="tabs">${items.map(([name,label])=>`<button type="button" data-page="${name}" class="${page===name?'active':''}">${label}</button>`).join('')}</div></section>`+html;}
+if(complianceView){
+  // Regulatory-only views: never reuse operational Drivers/Equipment screens here.
+  edit='';
+  if(complianceView==='Drivers / DQF'){
+    const rows=(state.drivers||[]).map(d=>{
+      const lic=d.license||d.licenseExpiry||'';const med=d.medical||d.medicalExpiry||'';
+      const status=x=>{if(!x)return '<span class="muted">Not recorded</span>';const days=Math.ceil((new Date(x)-new Date())/86400000);return `<span style="font-weight:650;color:${days<0?'#b91c1c':days<=30?'#a16207':'#147d5b'}">${esc(x)}${days<0?' · EXPIRED':days<=30?' · DUE SOON':''}</span>`};
+      return `<tr><td><strong>${esc(d.name||'Unknown')}</strong></td><td>${status(lic)}</td><td>${status(med)}</td><td>${esc(d.status||'Not recorded')}</td><td>${(d.random?'Enrolled':'Not recorded')}</td></tr>`;
+    }).join('');
+    html=`<section class="card"><h2>Driver Regulatory Compliance</h2><p class="muted">Compliance-only review of driver qualification and regulatory documentation. Hiring decisions, driver onboarding, payroll and settlements are not part of this view.</p></section><div class="grid">${card(`<div class="muted">Driver qualification records</div><div class="metric">${(state.drivers||[]).length}</div>`)}${card(`<div class="muted">CDL / license renewals (30 days)</div><div class="metric">${due('license')}</div>`)}${card(`<div class="muted">Medical certificate renewals (30 days)</div><div class="metric">${due('medical')}</div>`)}</div>${card(`<h3>Driver qualification monitoring</h3><div style="overflow:auto"><table><thead><tr><th>Driver</th><th>License expiration</th><th>Medical expiration</th><th>Record status</th><th>Random pool</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No driver qualification records available.</td></tr>'}</tbody></table></div>`)}${card(`<h3>Regulatory file checklist</h3><p class="muted">Review each driver for applicable FMCSA qualification requirements. The following items are checklist guidance; no document is automatically verified as compliant.</p><div class="grid"><div>☐ Driver qualification application on file<br>☐ CDL/license copy and expiration<br>☐ Medical qualification evidence, as applicable<br>☐ MVR / annual driving-record review</div><div>☐ Prior-employer safety performance inquiries, as applicable<br>☐ Road test certificate or accepted equivalent<br>☐ Drug & Alcohol pre-employment requirements, as applicable<br>☐ Qualification documents and retention review</div></div>`)}`; 
+  }else{
+    const units=(state.equipment||[]).map(v=>`<tr><td><strong>${esc(v.unit||v.unitNumber||v.number||v.id||'—')}</strong></td><td>${esc(v.type||'—')}</td><td>${esc(v.vin||'—')}</td><td>${esc(v.annualInspection||v.inspectionDate||'Not recorded')}</td><td>${esc(v.nextPM||v.pmDue||'Not recorded')}</td></tr>`).join('');
+    html=`<section class="card"><h2>Equipment Regulatory Compliance</h2><p class="muted">Vehicle inspection, maintenance and regulatory records only. No ownership settlements, deductions, load accounting or dispatch actions.</p></section><div class="grid">${card(`<div class="muted">Equipment records</div><div class="metric">${(state.equipment||[]).length}</div>`)}${card(`<div class="muted">Annual inspection</div><div class="metric">Review due dates</div>`)}${card(`<div class="muted">Preventive maintenance</div><div class="metric">Review schedule</div>`)}</div>${card(`<h3>Vehicle compliance register</h3><div style="overflow:auto"><table><thead><tr><th>Unit</th><th>Type</th><th>VIN</th><th>Annual inspection</th><th>Next PM</th></tr></thead><tbody>${units||'<tr><td colspan="5">No equipment records available.</td></tr>'}</tbody></table></div>`)}${card(`<h3>Vehicle regulatory checklist</h3><p class="muted">Requirements depend on vehicle and operation. The checklist is for tracking, not a compliance certification.</p><div class="grid"><div>☐ Periodic / annual inspection documentation<br>☐ Inspection, repair and maintenance records<br>☐ Driver vehicle inspection reports, where required</div><div>☐ Defect repairs and sign-off<br>☐ Preventive maintenance intervals<br>☐ Vehicle identification and applicable retention records</div></div>`)}`;
+  }
+}
+
+
+if(window.sawaCompliancePages && window.sawaCompliancePages.includes(page)){
+ const db=JSON.parse(localStorage.getItem('sawaComplianceOpsV2')||'{"actions":[],"training":[],"alerts":[],"credentials":[],"requests":[],"providers":[],"disputes":[],"hos":[],"retention":[],"hazmat":[]}');
+ const fields={
+ 'Corrective Actions':{key:'actions',columns:['Finding / violation','Assigned owner','Due date','Status'],intro:'Track violations, defects and audit findings through verified closure.'},
+ 'HOS & ELD':{key:'hos',columns:['Driver / unit','HOS exception','Date','Resolution'],intro:'Review missing logs, unidentified driving, duty limits and supporting evidence. ELD synchronization is not connected.'},
+ 'Training & Policies':{key:'training',columns:['Driver / group','Course or policy','Due date','Status'],intro:'Track safety training, assignments and acknowledgments.'},
+ 'Compliance Alerts':{key:'alerts',columns:['Driver / unit','Expiration or issue','Due date','Status'],intro:'Monitor compliance deadlines and escalations; automated delivery requires a backend.'},
+ 'FMCSA Monitoring':{key:'alerts',columns:['Carrier / unit','Safety finding','Date','Status'],intro:'Record safety status and BASIC/inspection follow-ups. Live FMCSA data is not connected.'},
+ 'MVR Monitoring':{key:'requests',columns:['Driver','MVR review or monitoring','Due date','Status'],intro:'Track annual MVR inquiries and monitoring results. No MVR provider is connected.'},
+ 'Document Requests':{key:'requests',columns:['Driver','Document requested','Due date','Status'],intro:'Prepare missing document requests; sending to Driver App requires a shared backend.'},
+ 'Company Credentials':{key:'credentials',columns:['Credential / authority','Reference','Expiration / due date','Status'],intro:'Track UCR, IFTA, IRP, insurance, operating authority and MCS-150 deadlines as applicable.'},
+ 'DataQs Disputes':{key:'disputes',columns:['Inspection / case','Issue','Submitted date','Status'],intro:'Track FMCSA DataQs review requests and evidence; submission is external.'},
+ 'Service Providers':{key:'providers',columns:['Provider','Service type','Renewal date','Status'],intro:'Track consortium/TPA, mechanics, labs and inspection providers.'},
+ 'Document Retention':{key:'retention',columns:['Record category','Retention rule / note','Review date','Status'],intro:'Document applicable record-retention schedules; legal periods differ by record type.'},
+ 'Hazmat Compliance':{key:'hazmat',columns:['Requirement / shipment','Responsible person','Due date','Status'],intro:'Optional hazmat-specific controls only for carriers subject to applicable requirements.'}
+ };
+ const panel=(title,description,rows,kind)=>`<section class="sc-panel"><div class="sc-panel-head"><h3>${esc(title)}</h3><p>${esc(description)}</p></div><div class="sc-checklist">${rows.map((r,i)=>`<div class="sc-check"><span style="flex:1"><strong>${esc(r[0])}</strong><small>${esc(r[1])}</small></span><span class="sc-check-state">${esc(r[2]||'Review')}</span></div>`).join('')}</div></section>`;
+ const basic=fields[page];
+ const all=Object.values(db).reduce((a,b)=>a+b.length,0);
+ const overdue=db.actions.filter(x=>String(x[3]||'').toLowerCase()!=='closed').length;
+ const count=state.drivers.length;
+ let body='';
+ if(page==='Compliance Dashboard'){
+  body=`<div class="sc-stats"><div class="sc-stat-link" data-page="Driver Compliance" role="button" tabindex="0" title="Open Driver Compliance"><span>Driver records</span><strong>${count}</strong><small>Review qualification status individually</small></div><div class="sc-stat-link" data-page="Equipment Compliance" role="button" tabindex="0" title="Open Equipment Compliance"><span>Vehicle records</span><strong>${state.equipment.length}</strong><small>Check inspections and maintenance</small></div><div class="sc-stat-link" data-page="Corrective Actions" role="button" tabindex="0" title="Open Corrective Actions"><span>Open corrective actions</span><strong>${overdue}</strong><small>Require follow-up and evidence</small></div></div>
+  ${panel('Compliance readiness · action queue','A consolidated view of documented findings, not a legal certification.',[['Driver qualification','Review CDL, medical evidence, MVR, applications and required records','DQF'],['Vehicle compliance','Review periodic inspections, maintenance and defects','Part 396'],['HOS & ELD','Review driver logs, exceptions and unidentified driving','Part 395'],['Drug & Alcohol','Review testing, Clearinghouse and consortium obligations','Part 382'],['Audit readiness','Export evidence and document open findings','Audit']], 'dashboard')}`;
+ }else if(page==='Safety Scorecards'){
+  body=panel('Driver safety scorecards','Illustrative record-level indicators. Scores should be configured and validated against actual evidence.',state.drivers.slice(0,15).map(d=>[d.name||d.fullName||'Driver', 'Review inspections, crashes, HOS, coaching and training','Review']), 'scores');
+ }else if(page==='Regulatory Calendar'){
+  body=panel('Regulatory calendar','Recommended reviews and event-driven obligations; actual due dates must be calculated per carrier and record.',[['Weekly / monthly reviews','HOS, defects, driver and vehicle alerts','Internal'],['Annual MVR inquiry & review','For applicable drivers; rolling individual due dates','Annual'],['Annual periodic vehicle inspections','For covered vehicles within 12 months','12 months'],['Clearinghouse queries','Applicable CDL driver annual queries','Annual'],['MCS-150 updates','Biennial according to USDOT schedule','Biennial'],['UCR / IFTA / IRP','Renewal and reporting requirements when applicable','Variable']],'calendar')+`<button type="button" class="sc-primary" data-page="Compliance Schedule">Open review schedule</button>`;
+ }else if(page==='Audit Readiness'){
+  body=`<div class="sc-stats"><div><span>Drivers</span><strong>${state.drivers.length}</strong><small>DQF evidence</small></div><div><span>Vehicles</span><strong>${state.equipment.length}</strong><small>Maintenance and inspection records</small></div><div><span>Accidents</span><strong>${state.accidents.length}</strong><small>Accident register</small></div></div>`+panel('Audit preparation','Verify required files and export existing reports; this is not an FMCSA audit certification.',[['Driver qualification files','Application, medical, MVR, annual review and other applicable records','Check'],['HOS records','Logs, supporting documents and exceptions','Check'],['Maintenance and inspection files','Periodic inspections, repairs and defect records','Check'],['Accident register','Reportable accidents and associated records','Check'],['Drug and alcohol records','Required program records and Clearinghouse compliance','Check']],'audit')+`<button type="button" class="sc-primary" data-page="Audit">Open existing Audit module</button> <button type="button" class="sc-primary" data-page="Reports">Open Reports</button>`;
+ }else if(basic){
+ const entries=db[basic.key]||[];
+ body=`<section class="sc-panel"><div class="sc-panel-head"><h3>${esc(page)} records</h3><p>${esc(basic.intro)}</p><button type="button" class="sc-primary" data-sc-add="${esc(page)}">+ Add compliance record</button></div>
+ <div class="sc-checklist">${entries.length?entries.map((r,i)=>`<div class="sc-check"><span style="flex:1"><strong>${esc(r[0]||'Record')}</strong><small>${esc(r[1]||'')} · ${esc(r[2]||'')}</small></span><span class="sc-check-state">${esc(r[3]||'Open')}</span><button type="button" class="sc-delete" data-sc-delete="${esc(page)}" data-sc-index="${i}">Remove</button></div>`).join(''):'<div class="sc-empty">No records yet. Add your first compliance item to start tracking.</div>'}</div></section>`;
+ }
+ html=`<div class="sawa-compliance"><section class="sc-hero"><div><span class="sc-eyebrow">SAWATMS · SAFETY & COMPLIANCE</span><h2>${esc(page)}</h2><p>Compliance-only workspace · Driver, vehicle and regulatory controls</p></div><div class="sc-hero-tag">COMPLIANCE<br><strong>CONTROL CENTER</strong></div></section><div class="sc-demo-actions"><button type="button" class="sc-demo-button" data-sc-demo="${esc(page)}">✦ Add Demo Data</button><span>Load sample compliance records for this section</span></div>${body}<div class="sc-notice"><strong>Prototype scope:</strong> Added records are stored only in this browser. Live integrations, document evidence, reminders, permissions, regulatory verification and shared driver-app synchronization require production backend development. Requirements vary by carrier and jurisdiction.</div></div>`;
+}
+
+if(page==='Compliance Schedule'){
+ const groups=[
+ ['Weekly','Weekly review','Internal recommended cadence, not a blanket FMCSA weekly filing requirement',[
+ ['Review HOS/ELD exception reports','Review potential 11/14/60/70-hour issues, missing logs, unidentified driving and edits; follow up with drivers.'],
+ ['Inspect unresolved vehicle defects','Check DVIR defects where applicable, repair status and out-of-service issues.'],
+ ['Review driver and vehicle alerts','Check upcoming CDL/medical, annual inspections, PM and other deadlines.'],
+ ['Review new roadside inspections','Log violations, track correction and supporting documents.'],
+ ['Review accidents and incidents','Ensure any reportable accidents are recorded and post-accident procedures considered.'],
+ ['Track open corrective actions','Assign owners and due dates for unresolved compliance findings.']
+ ]],
+ ['Monthly','Monthly control review','Recommended management review; individual legal deadlines may differ',[
+ ['DQF document expiration review','Confirm licenses, medical qualification, MVR and other applicable documents remain current.'],
+ ['Vehicle maintenance record review','Check inspections, repairs, preventive maintenance and defect sign-offs.'],
+ ['Drug & Alcohol program review','Review consortium/TPA status, completed tests, pending results and random selection obligations.'],
+ ['HOS coaching and recurring violations','Identify repeated HOS exceptions and document coaching/corrective actions.'],
+ ['FMCSA safety and inspection trends','Review available SMS/BASIC trends, inspection outcomes and enforcement alerts.'],
+ ['Safety policy and training follow-up','Track outstanding acknowledgments and role-specific training.']
+ ]],
+ ['Quarterly','Quarterly compliance assessment','Recommended internal audit cycle; IFTA filings generally quarterly where applicable',[
+ ['Run sample DQF audit','Sample driver files against applicable Part 391 documentation requirements.'],
+ ['Run sample vehicle file audit','Sample maintenance, periodic inspection and repair documentation under Part 396.'],
+ ['Review drug/alcohol random testing progress','Verify annual targets and selection process with the consortium/TPA; do not substitute quarterly quotas for applicable annual requirements.'],
+ ['Review accident register and follow-up','Check completeness and corrective actions for qualifying accidents.'],
+ ['Review IFTA reporting status','For IFTA licensees, verify quarterly returns and underlying mileage/fuel records; due dates depend on jurisdiction.'],
+ ['Review company registrations and authority','Confirm USDOT, operating authority, insurance and applicable state credentials.']
+ ]],
+ ['Yearly','Annual & event-driven requirements','Some are mandatory annual reviews; others are periodic, renewal-based or event-driven',[
+ ['Annual driver MVR inquiry and review','Perform required annual inquiry/review and document it for applicable drivers under 49 CFR 391.25.'],
+ ['Annual vehicle periodic inspections','Ensure each covered vehicle has a compliant periodic inspection within the required 12-month interval.'],
+ ['Clearinghouse annual limited queries','Complete annual queries for applicable CDL drivers, with consent and applicable exceptions.'],
+ ['Review drug/alcohol random testing compliance','Reconcile annual random testing rate and records with the TPA.'],
+ ['Review USDOT biennial MCS-150 update','Check assigned biennial filing schedule; this is not an annual filing for every carrier.'],
+ ['Review policies, records and retention','Audit required retention periods, training, accident register and program procedures.'],
+ ['Review UCR and other renewals','Check annual UCR and applicable credentials; due dates vary.'],
+ ['Review IFTA/IRP renewals where applicable','Check applicable annual credentials and registration renewals.']
+ ]]
+ ];
+ const done=JSON.parse(localStorage.getItem('sawaComplianceChecksV1')||'{}');
+ const group=groups.find(g=>g[0]=== (window.sawaCompliancePeriod||'Weekly'))||groups[0];
+ const today=new Date();const key=group[0]+':'+(group[0]==='Weekly'?today.getFullYear()+'-W'+Math.ceil(((today-new Date(today.getFullYear(),0,1))/86400000+new Date(today.getFullYear(),0,1).getDay()+1)/7):group[0]==='Monthly'?today.toISOString().slice(0,7):group[0]==='Quarterly'?today.getFullYear()+'-Q'+(Math.floor(today.getMonth()/3)+1):today.getFullYear());
+ const completed=group[3].filter((_,i)=>done[key+':'+i]).length;
+ const pct=Math.round(completed/group[3].length*100);
+ html=`<div class="sawa-compliance">
+ <section class="sc-hero"><div><span class="sc-eyebrow">SAWATMS · REGULATORY CONTROL CENTER</span><h2>Compliance Review Schedule</h2><p>Manage recurring safety checks, evidence and deadlines in one place. Designed for compliance-only carriers.</p></div><div class="sc-hero-tag">CONTROL PERIOD<br><strong>${esc(key)}</strong></div></section>
+ <div class="sc-stats"><div><span>Review completion</span><strong>${pct}%</strong><small>${completed} of ${group[3].length} checks completed</small></div><div><span>Outstanding checks</span><strong>${group[3].length-completed}</strong><small>For selected review period</small></div><div><span>Review cadence</span><strong>${esc(group[0])}</strong><small>Switch periods below</small></div></div>
+ <div class="sc-demo-actions"><button type="button" class="sc-demo-button" data-sc-demo="Compliance Schedule">✦ Add Demo Data</button><span>Mark example checks complete for this review period</span></div><div class="sc-periods">${groups.map(g=>`<button type="button" class="${g[0]===group[0]?'selected':''}" data-sc-period="${g[0]}">${g[0]}</button>`).join('')}</div>
+ <section class="sc-panel"><div class="sc-panel-head"><div><h3>${esc(group[1])}</h3><p>${esc(group[2])}</p></div><div class="sc-progress"><div style="width:${pct}%"></div></div></div>
+ <div class="sc-checklist">${group[3].map(([name,detail],i)=>`<label class="sc-check ${done[key+':'+i]?'done':''}"><input type="checkbox" data-sc-check="${i}" data-sc-key="${esc(key)}" ${done[key+':'+i]?'checked':''}><span><strong>${esc(name)}</strong><small>${esc(detail)}</small></span><span class="sc-check-state">${done[key+':'+i]?'Reviewed':'To review'}</span></label>`).join('')}</div></section>
+ <div class="sc-notice"><strong>Regulatory guidance:</strong> Weekly, monthly and quarterly review schedules are suggested internal controls, not universal FMCSA mandates. Actual legal requirements depend on carrier operations, driver/vehicle type, jurisdiction, and triggering events. Checking a box documents a demo review only; it does not verify compliance or create an audit-ready evidence record. Production should add assigned owner, evidence attachment, timestamps and audit history.</div>
+ </div>`;
+}
+
+if(['Accidents','Drug & Alcohol','Inspections','Compliance Schedule',...window.sawaCompliancePages].includes(page)||complianceView){
+const scCurrent=complianceView?(complianceView==='Drivers / DQF'?'Driver Compliance':'Equipment Compliance'):page;
+const scGroups=[
+ ['Overview',['Compliance Dashboard']],
+ ['Drivers',['Driver Compliance','MVR Monitoring','Safety Scorecards','Document Requests']],
+ ['Equipment',['Equipment Compliance','Inspections']],
+ ['Safety Operations',['HOS & ELD','Accidents','Corrective Actions','DataQs Disputes']],
+ ['Drug & Alcohol',['Drug & Alcohol']],
+ ['Programs & Monitoring',['Training & Policies','FMCSA Monitoring','Compliance Alerts','Service Providers','Hazmat Compliance']],
+ ['Regulatory Management',['Compliance Schedule','Regulatory Calendar','Document Retention','Company Credentials','Audit Readiness']]
+];
+const scActive=scGroups.find(g=>g[1].includes(scCurrent))||scGroups[0];
+html=`<section class="card sc-navigation"><div class="sc-nav-heading"><div><span class="sc-nav-kicker">REGULATORY WORKSPACE</span><h2>Safety & Compliance</h2><p class="muted">Dedicated DOT compliance controls. No dispatch, hiring decisions or settlements.</p></div><span class="sc-nav-count">7 SECTIONS</span></div>
+<div class="sc-eight-tabs" role="navigation" aria-label="Safety and Compliance sections">${scGroups.map(([label,entries])=>`<button type="button" data-page="${entries[0]}" class="${scActive[0]===label?'active':''}" ${scActive[0]===label?'aria-current="page"':''}>${esc(label)}</button>`).join('')}</div>
+${scActive[1].length>1?`<div class="sc-subnav"><span class="sc-subnav-title">${esc(scActive[0])} · Modules</span><div class="sc-subnav-links">${scActive[1].map(name=>`<button type="button" data-page="${name}" class="${scCurrent===name?'active':''}">${esc(name)}</button>`).join('')}</div></div>`:''}
+</section>`+html;
+}
+
 if(['Reports','Audit'].includes(page)){html=`<section class="card"><h2>Reports & Audit</h2><div class="tabs"><button type="button" data-page="Reports" class="${page==='Reports'?'active':''}">Reports</button><button type="button" data-page="Audit" class="${page==='Audit'?'active':''}">Audit</button></div></section>`+html;}
 if(page==='Drivers / DQF'&&edit.startsWith('driverApplication:')){const d=state.drivers.find(x=>String(x.id)===edit.split(':')[1]);if(d)html=driverApplicationEditor(d);}
 if(page==='Dashboard')html+=fcCarrierPremiumChart();$('app').innerHTML=html;fleetActivateMetricCards();fcMetricPrivacyApply();}
@@ -1679,32 +1805,6 @@ if(f.id==='tmsPayForm'){tms.payRules[v('Driver')]={method:v('Method'),rate:Math.
 if(f.id==='tmsFuelForm'){tms.fuel.push({id:'MAN-'+Date.now(),driverId:v('Driver'),unit:v('Truck'),type:v('Transaction Type'),description:v('Description'),amount:Math.max(0,Number(v('Amount'))||0),date:v('Date'),released:v('Transaction Type')!=='Fuel',source:'Manual'});alert('Demo transaction saved.')}
 tmsSave();render()});
 render();
-</script>
-<div id="fleetBuildStamp" style="position:fixed;bottom:6px;right:10px;background:#f1f5f9;color:#334155;font:11px Arial,sans-serif;padding:4px 8px;border-radius:6px;z-index:200;pointer-events:none">FleetComply build: 2026-10-21 · Dashboard + driver status save fix</div>
-<script id="fc-premium-interactions">(function(){
- const key='fleetcomply-ui-theme';
- const toggle=document.getElementById('fcThemeToggle');
- function apply(dark){document.body.classList.toggle('fc-dark',dark);if(toggle){toggle.textContent=dark?'☀ Light mode':'☾ Dark mode';toggle.setAttribute('aria-pressed',String(dark));}}
- try{apply(localStorage.getItem(key)==='dark');}catch(e){apply(false);}
- if(toggle)toggle.addEventListener('click',function(){const dark=!document.body.classList.contains('fc-dark');apply(dark);try{localStorage.setItem(key,dark?'dark':'light');}catch(e){}});
-})();
-/* FleetComply factoring review and browser ZIP export */
-(function(){
- document.addEventListener('change',async e=>{const el=e.target.closest('[data-fc-upload]');if(!el)return;const file=el.files&&el.files[0];if(!file)return;const l=tms.loads.find(x=>String(x.id)===String(el.dataset.fcId));if(!l)return;if(file.size>20*1024*1024)return alert('Maximum file size: 20 MB.');const kind=el.dataset.fcUpload;try{await tmsStoreLoadFile(l.id,kind,file);if(kind==='ratecon'){l.rateconName=file.name;l.rateconApproved=false;}else{l.podName=file.name;l.podApproved=false;l.podSidesReviewed=false;}l.invoiceStatus='Not Ready';tmsAudit(l,kind+' file uploaded: '+file.name);tmsSave();render();}catch(err){alert('Upload could not be saved in this browser: '+err.message)}});
- document.addEventListener('click',async e=>{const el=e.target.closest('[data-fc-open]');if(!el)return;try{await tmsOpenLoadFile(el.dataset.fcId,el.dataset.fcOpen)}catch(err){alert(err.message)}});
- document.addEventListener('change',e=>{const el=e.target.closest('[data-fc-review]');if(!el)return;const l=tms.loads.find(x=>String(x.id)===String(el.dataset.fcId));if(!l)return;const k=el.dataset.fcReview;if(k==='ratecon'&&!l.rateconName||k==='pod'&&!l.podName){el.checked=false;alert('Attach the document first.');return}const prop={ratecon:'rateconApproved',details:'detailsReviewed',pod:'podApproved',sides:'podSidesReviewed'}[k];l[prop]=el.checked;l.invoiceStatus='Not Ready';tmsAudit(l,k+' review '+(el.checked?'approved':'revoked'));tmsSave();render();});
- document.addEventListener('submit',e=>{if(e.target.id!=='fcFactoringEmailForm')return;e.preventDefault();const email=e.target.elements.namedItem('email').value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return alert('Enter a valid email.');state.account.factoringEmail=email;save();render();alert('Factoring email saved.');});
- document.addEventListener('click',async e=>{if(e.target.closest('[data-fc-factoring-settings]')){page='Account / Settings';tab='Factoring';render();return}if(!e.target.closest('[data-fc-factoring-zip]'))return;
- const email=String(state.account?.factoringEmail||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return alert('Set factoring email under Settings → Factoring.');
- const ids=[...document.querySelectorAll('.fc-factoring-select:checked')].map(x=>x.value);const selected=ids.map(id=>tms.loads.find(l=>String(l.id)===id)).filter(Boolean);if(!selected.length)return alert('Select at least one load.');if(selected.some(l=>!tmsFactoringReady(l)))return alert('Some selected loads are no longer ready.');
- const files=[];const manifest=['FLEETCOMPLY FACTORING PACKET','DEMO - Not a submitted factoring request',''];
- try{const db=await tmsRateconDB();try{for(const l of selected){const folder=String(l.id).replace(/[^a-zA-Z0-9_-]/g,'_');for(const [kind,key,label] of [['ratecon',String(l.id),'Ratecon'],['pod',String(l.id)+':pod','POD']]){const file=await new Promise((resolve,reject)=>{const tx=db.transaction('files','readonly');const req=tx.objectStore('files').get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});if(!file)throw Error('Missing stored '+label+' for '+l.id+'. Re-upload it under Dispatch → Edit Load.');const ext=(file.name||'document.pdf').replace(/[^a-zA-Z0-9._-]/g,'_');files.push({name:folder+'/'+label+'_'+ext,data:new Uint8Array(await file.arrayBuffer())});}manifest.push('Load: '+l.id+' | Broker: '+(l.broker||'')+' | Rate: '+tmsMoney(l.rate)+' | Pickup: '+(l.pickup||'')+' | Delivery: '+(l.delivery||''));}}finally{db.close()}}
- catch(err){alert('ZIP not created: '+err.message);return}
- files.unshift({name:'MANIFEST.txt',data:new TextEncoder().encode(manifest.join('\n'))});const zip=fcMakeZip(files);const a=document.createElement('a');const url=URL.createObjectURL(new Blob([zip],{type:'application/zip'}));a.href=url;a.download='FleetComply_Factoring_'+new Date().toISOString().slice(0,10)+'.zip';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
- const subject='Factoring packet — '+selected.map(l=>l.id).join(', ');const body='Hello,\n\nPlease find our factoring packet for the following loads:\n'+selected.map(l=>l.id+' — '+tmsMoney(l.rate)).join('\n')+'\n\nPlease attach the downloaded ZIP file before sending.\n\nThank you.';location.href='mailto:'+encodeURIComponent(email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);alert('ZIP downloaded. Attach it to the email draft before sending. Email is not sent automatically.');
- });
- function fcMakeZip(files){const chunks=[],central=[];let offset=0;const encoder=new TextEncoder();const crcTable=Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0});const crc32=bytes=>{let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0};const u16=(d,i,v)=>d.setUint16(i,v,true),u32=(d,i,v)=>d.setUint32(i,v,true);const push=(arr)=>{chunks.push(arr);offset+=arr.length};for(const f of files){const name=encoder.encode(f.name),data=f.data,crc=crc32(data),at=offset;const h=new Uint8Array(30+name.length),v=new DataView(h.buffer);u32(v,0,0x04034b50);u16(v,4,20);u16(v,6,0x800);u32(v,14,crc);u32(v,18,data.length);u32(v,22,data.length);u16(v,26,name.length);h.set(name,30);push(h);push(data);const c=new Uint8Array(46+name.length),w=new DataView(c.buffer);u32(w,0,0x02014b50);u16(w,4,20);u16(w,6,20);u16(w,8,0x800);u32(w,16,crc);u32(w,20,data.length);u32(w,24,data.length);u16(w,28,name.length);u32(w,42,at);c.set(name,46);central.push(c)}const centralAt=offset;central.forEach(push);const end=new Uint8Array(22),v=new DataView(end.buffer);u32(v,0,0x06054b50);u16(v,8,files.length);u16(v,10,files.length);u32(v,12,offset-centralAt);u32(v,16,centralAt);push(end);const out=new Uint8Array(offset);let n=0;for(const c of chunks){out.set(c,n);n+=c.length}return out}
-})();
 </script><style>
 .fc-date-filter{background:linear-gradient(115deg,#f0f5ff,#fff);border:1.5px solid #c8d7ee;border-radius:14px;padding:16px 18px;margin:16px 0 20px;box-shadow:0 3px 12px rgba(18,45,84,.05)}
 .fc-date-title{font-size:15px;font-weight:800;color:#172d4e;margin-bottom:12px}.fc-date-count{display:inline-block;margin-left:10px;background:#dce9ff;border-radius:999px;padding:3px 10px;font-size:12px;color:#234b85}
@@ -1772,6 +1872,114 @@ try{
 });
 </script>
 <style>.fc-load-zip{background:#1c528a!important;color:#fff!important;border-color:#1c528a!important;font-weight:750!important}.fc-load-zip:hover{background:#12365e!important}</style>
-</body></html>
-
-<style>.fc-quick-driver .grid{grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px}.fc-quick-driver .field{margin:0}.fc-quick-intro{padding:12px 16px;background:#eff6ff;border-radius:12px;margin-bottom:14px;color:#183e75}.fc-quick-intro p{margin:5px 0 0;color:#475569}.fc-quick-driver input,.fc-quick-driver select{background:#fff!important;color:#17243a!important;opacity:1!important}</style>
+<style>
+.sawa-compliance{--sc-navy:#112b4d;--sc-blue:#2463eb;--sc-border:#e2e8f0;font-family:inherit;display:grid;gap:18px}
+.sawa-compliance .sc-hero{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:30px 34px;background:linear-gradient(115deg,#102747,#1d4878 75%,#235c98);color:white;border-radius:20px;box-shadow:0 16px 36px #122b4a25}
+.sawa-compliance .sc-eyebrow{font-size:11px;letter-spacing:2px;font-weight:800;color:#b8d7fa}
+.sawa-compliance .sc-hero h2{font-size:28px;color:#fff;margin:10px 0}.sawa-compliance .sc-hero p{color:#d8e8fa;max-width:580px;margin:0}
+.sawa-compliance .sc-hero-tag{border:1px solid #ffffff44;background:#ffffff12;padding:14px 20px;border-radius:13px;font-size:10px;letter-spacing:1px;color:#d8e8fa;white-space:nowrap}.sawa-compliance .sc-hero-tag strong{display:block;color:#fff;font-size:17px;margin-top:7px;letter-spacing:0}
+.sawa-compliance .sc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.sawa-compliance .sc-stats>div{border:1px solid var(--sc-border);border-radius:16px;background:#fff;padding:19px 21px;box-shadow:0 4px 16px #183b5e0a}
+.sawa-compliance .sc-stats span,.sawa-compliance .sc-stats small{display:block;color:#64748b;font-size:12px}.sawa-compliance .sc-stats strong{display:block;color:var(--sc-navy);font-size:27px;margin:6px 0}
+.sawa-compliance .sc-periods{display:flex;gap:8px;flex-wrap:wrap;background:#edf3f9;padding:6px;border-radius:13px;width:fit-content}
+.sawa-compliance .sc-periods button{border:0;background:transparent;color:#47617d;border-radius:9px;padding:10px 17px;font-weight:750;cursor:pointer}
+.sawa-compliance .sc-periods button.selected{background:#fff;color:#173b69;box-shadow:0 2px 8px #122b4a1c}
+.sawa-compliance .sc-panel{border:1px solid var(--sc-border);background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 25px #183b5e0b}
+.sawa-compliance .sc-panel-head{padding:24px 26px 18px;border-bottom:1px solid var(--sc-border)}
+.sawa-compliance .sc-panel-head h3{margin:0 0 7px;font-size:20px;color:var(--sc-navy)}.sawa-compliance .sc-panel-head p{margin:0 0 17px;color:#64748b;font-size:13px}
+.sawa-compliance .sc-progress{height:7px;background:#eaf0f7;border-radius:10px;overflow:hidden}.sawa-compliance .sc-progress div{height:100%;background:linear-gradient(90deg,#2c65df,#17a7a1);border-radius:10px;transition:width .2s}
+.sawa-compliance .sc-checklist{padding:5px 22px}.sawa-compliance .sc-check{display:flex;align-items:center;gap:14px;padding:18px 5px;border-bottom:1px solid #edf1f5;cursor:pointer}.sawa-compliance .sc-check:last-child{border-bottom:0}
+.sawa-compliance .sc-check input{width:19px;height:19px;flex:none;accent-color:#19766e}.sawa-compliance .sc-check>span:nth-child(2){flex:1;min-width:0}.sawa-compliance .sc-check strong{display:block;color:#233e60;font-size:14px}.sawa-compliance .sc-check small{display:block;color:#64748b;line-height:1.55;margin-top:4px;font-size:12px}
+.sawa-compliance .sc-check-state{font-size:11px;color:#946200;background:#fff5d8;padding:6px 9px;border-radius:20px;white-space:nowrap}.sawa-compliance .sc-check.done .sc-check-state{background:#e4f7ef;color:#14765d}
+.sawa-compliance .sc-notice{padding:18px 22px;border-radius:14px;background:#f1f5fa;color:#4d6077;font-size:12px;line-height:1.7;border:1px solid #dce6f1}
+@media(max-width:650px){.sawa-compliance .sc-hero{padding:22px;display:block}.sawa-compliance .sc-hero-tag{margin-top:18px;width:fit-content}.sawa-compliance .sc-stats{grid-template-columns:1fr}.sawa-compliance .sc-check-state{display:none}.sawa-compliance .sc-periods{width:100%}.sawa-compliance .sc-periods button{flex:1;padding:10px 6px}}
+</style><script>
+document.addEventListener('click',function(e){
+ const b=e.target.closest('[data-sc-period]');
+ if(b){window.sawaCompliancePeriod=b.dataset.scPeriod;if(typeof render==='function')render();}
+});
+document.addEventListener('change',function(e){
+ const b=e.target.closest('[data-sc-check]');
+ if(!b)return;
+ const data=JSON.parse(localStorage.getItem('sawaComplianceChecksV1')||'{}');
+ data[b.dataset.scKey+':'+b.dataset.scCheck]=b.checked;
+ localStorage.setItem('sawaComplianceChecksV1',JSON.stringify(data));
+ if(typeof render==='function')render();
+});
+</script><style>
+.sawa-compliance .sc-primary{background:#17477b;color:#fff;border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;margin:8px 8px 8px 0}
+.sawa-compliance .sc-primary:hover{background:#2463a2}
+.sawa-compliance .sc-delete{background:#fff;color:#b4233a;border:1px solid #f3c4cc;border-radius:8px;padding:7px 10px;cursor:pointer}
+.sawa-compliance .sc-empty{padding:32px;color:#687c92;text-align:center}
+.sc-nav-tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;gap:6px!important;scrollbar-width:thin;padding-bottom:10px}
+.sc-nav-tabs button{white-space:nowrap;flex:none}
+</style>
+<script>
+document.addEventListener('click',function(e){
+ const add=e.target.closest('[data-sc-add]'),del=e.target.closest('[data-sc-delete]');
+ if(!add&&!del)return;
+ const field={
+ 'Corrective Actions':'actions','HOS & ELD':'hos','Training & Policies':'training','Compliance Alerts':'alerts','FMCSA Monitoring':'alerts','MVR Monitoring':'requests','Document Requests':'requests','Company Credentials':'credentials','DataQs Disputes':'disputes','Service Providers':'providers','Document Retention':'retention','Hazmat Compliance':'hazmat'
+ };
+ const db=JSON.parse(localStorage.getItem('sawaComplianceOpsV2')||'{"actions":[],"training":[],"alerts":[],"credentials":[],"requests":[],"providers":[],"disputes":[],"hos":[],"retention":[],"hazmat":[]}');
+ const p=(add||del).dataset.scAdd||(add||del).dataset.scDelete,key=field[p];if(!key)return;
+ if(add){
+ const title=prompt('Compliance item / driver / vehicle:');if(!title||!title.trim())return;
+ const detail=prompt('Description / assigned owner:')||'';
+ const date=prompt('Due date / reference (optional):')||'';
+ const status=prompt('Status (Open, In progress, Closed):','Open')||'Open';
+ (db[key]||(db[key]=[])).push([title.trim(),detail,date,status]);
+ }else{if(!confirm('Remove this record?'))return;(db[key]||[]).splice(Number(del.dataset.scIndex),1);}
+ localStorage.setItem('sawaComplianceOpsV2',JSON.stringify(db));
+ if(typeof render==='function')render();
+});
+</script><style>
+ .sc-navigation{border:1px solid #e0e8f2!important;border-radius:18px!important;padding:24px!important;box-shadow:0 8px 28px #193c5d0b!important}
+.sc-nav-heading{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}.sc-nav-heading h2{font-size:23px!important;margin:6px 0!important;color:#183655}.sc-nav-heading p{margin:0;font-size:13px}.sc-nav-kicker{color:#3776b9;font-size:11px;letter-spacing:1.6px;font-weight:850}.sc-nav-count{background:#edf5ff;color:#23568b;border-radius:30px;padding:8px 13px;font-size:11px;font-weight:800;white-space:nowrap}
+.sc-eight-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.sc-eight-tabs button{border:1px solid #d9e5f2;background:#f7faff;color:#294a6e;border-radius:12px;padding:17px 12px;min-height:56px;font-size:15px;font-weight:800;line-height:1.25;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}.sc-eight-tabs button:hover{border-color:#729cd0;background:#eaf3ff;transform:translateY(-1px)}.sc-eight-tabs button.active{background:linear-gradient(115deg,#163c68,#2562a0);border-color:#163c68;color:#fff;box-shadow:0 6px 14px #1b4b7c24}
+.sc-subnav{margin-top:19px;padding-top:18px;border-top:1px solid #e7edf4}.sc-subnav-title{display:block;color:#627c98;font-size:12px;font-weight:850;letter-spacing:.4px;margin-bottom:12px}.sc-subnav-links{display:flex;flex-wrap:wrap;gap:9px}.sc-subnav-links button{border:1px solid #d7e3ef;border-radius:10px;background:#fff;color:#345674;font-size:14px;font-weight:750;padding:12px 15px;cursor:pointer}.sc-subnav-links button:hover{background:#edf5ff}.sc-subnav-links button.active{background:#e5f1ff;color:#154f8a;border-color:#87b8ee}
+@media(max-width:850px){.sc-eight-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.sc-navigation{padding:16px!important}.sc-eight-tabs{gap:7px}.sc-eight-tabs button{font-size:13px;padding:13px 6px;min-height:55px}.sc-nav-count{display:none}.sc-subnav-links button{font-size:13px}}
+</style><style>
+.sc-demo-actions{display:flex;align-items:center;flex-wrap:wrap;gap:13px;margin:0 0 2px}
+.sc-demo-actions>span{font-size:12px;color:#71839b;font-weight:600}
+.sc-demo-button{background:linear-gradient(115deg,#6d3de1,#346de7 65%,#178bb5)!important;color:white!important;border:1px solid #6550dd!important;border-radius:12px!important;padding:13px 20px!important;min-height:46px;font-size:14px!important;font-weight:850!important;box-shadow:0 7px 18px #4c55c83b;cursor:pointer;transition:transform .18s,box-shadow .18s}
+.sc-demo-button:hover{transform:translateY(-2px);box-shadow:0 10px 23px #4c55c859}
+.sc-stat-link{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.sc-stat-link:hover{transform:translateY(-2px);box-shadow:0 8px 22px #22578b23!important;border-color:#7ba9d9!important}
+.sc-stat-link:focus-visible{outline:3px solid #3c85e4}
+.sc-eight-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+</style>
+<script>
+document.addEventListener('click',function(e){
+ const b=e.target.closest('[data-sc-demo]');if(!b)return;
+ const pageName=b.dataset.scDemo;
+ if(pageName==='Compliance Schedule'){
+  const today=new Date(),period=window.sawaCompliancePeriod||'Weekly';
+  const key=period+':'+(period==='Weekly'?today.getFullYear()+'-W'+Math.ceil(((today-new Date(today.getFullYear(),0,1))/86400000+new Date(today.getFullYear(),0,1).getDay()+1)/7):period==='Monthly'?today.toISOString().slice(0,7):period==='Quarterly'?today.getFullYear()+'-Q'+(Math.floor(today.getMonth()/3)+1):today.getFullYear());
+  const saved=JSON.parse(localStorage.getItem('sawaComplianceChecksV1')||'{}');
+  for(let i=0;i<3;i++)saved[key+':'+i]=true;
+  localStorage.setItem('sawaComplianceChecksV1',JSON.stringify(saved));
+ }else{
+  const db=JSON.parse(localStorage.getItem('sawaComplianceOpsV2')||'{"actions":[],"training":[],"alerts":[],"credentials":[],"requests":[],"providers":[],"disputes":[],"hos":[],"retention":[],"hazmat":[]}');
+  const samples={
+   actions:[['Brake defect on Unit 204','Fleet Safety Manager','2026-11-02','In progress'],['Missing medical certificate','Driver Compliance','2026-11-05','Open']],
+   hos:[['Driver 1024 / Unit 204','Unassigned driving review','2026-10-23','Open'],['Driver 1031 / Unit 208','Missing log certification','2026-10-24','In progress']],
+   training:[['Driver 1024','HOS refresher training','2026-11-10','Assigned'],['All drivers','Distracted driving policy acknowledgment','2026-11-15','Open']],
+   alerts:[['Unit 204','Periodic inspection approaching','2026-11-12','Due soon'],['Driver 1024','Annual MVR review','2026-11-04','Open']],
+   requests:[['Driver 1024','Annual MVR review','2026-11-04','Pending'],['Driver 1031','Updated medical qualification evidence','2026-11-08','Requested']],
+   credentials:[['UCR','Annual registration','2027-01-01','Review'],['MCS-150','Biennial update schedule','2027-03-01','Review']],
+   disputes:[['Inspection 2026-114','Incorrect violation code','2026-10-21','Draft'],['Inspection 2026-121','Supporting documentation review','2026-10-24','In progress']],
+   providers:[['North Star Testing','Consortium / TPA','2027-01-01','Active'],['Midwest Fleet Services','Maintenance provider','2027-02-01','Active']],
+   retention:[['Driver qualification files','Verify applicable retention requirements','2026-11-01','Review'],['HOS supporting documents','Check applicable retention period','2026-11-01','Review']],
+   hazmat:[['Applicability assessment','Safety Manager','2026-11-05','Not started'],['Hazmat training review','Safety Manager','2026-11-15','Review']]
+  };
+  const mapping={'Corrective Actions':'actions','HOS & ELD':'hos','Training & Policies':'training','Compliance Alerts':'alerts','FMCSA Monitoring':'alerts','MVR Monitoring':'requests','Document Requests':'requests','Company Credentials':'credentials','DataQs Disputes':'disputes','Service Providers':'providers','Document Retention':'retention','Hazmat Compliance':'hazmat','Compliance Dashboard':'actions','Safety Scorecards':'actions','Regulatory Calendar':'credentials','Audit Readiness':'actions'};
+  const key=mapping[pageName]||'actions';db[key]=db[key]||[];
+  const existing=new Set(db[key].map(r=>r[0]));
+  (samples[key]||[]).forEach(r=>{if(!existing.has(r[0]))db[key].push(r)});
+  localStorage.setItem('sawaComplianceOpsV2',JSON.stringify(db));
+ }
+ if(typeof render==='function')render();
+});
+document.addEventListener('keydown',function(e){const a=e.target.closest('.sc-stat-link[data-page]');if(a&&(e.key==='Enter'||e.key===' ')){e.preventDefault();a.click()}});
+</script><style>.fc-quick-driver .grid{grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:12px}.fc-quick-driver .field{margin:0}.fc-quick-intro{padding:12px 16px;background:#eff6ff;border-radius:12px;margin-bottom:14px;color:#183e75}.fc-quick-intro p{margin:5px 0 0;color:#475569}.fc-quick-driver input,.fc-quick-driver select{background:#fff!important;color:#17243a!important;opacity:1!important}</style></body></html>
